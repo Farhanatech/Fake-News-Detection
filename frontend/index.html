@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake News Detector</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background">
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+    
+    <div class="container">
+        <form onsubmit="event.preventDefault();">
+            <h3>Fake News Detector</h3>
+
+            <label for="newsInput">Paste News Article</label>
+            <textarea id="newsInput" placeholder="Enter or paste news text here to verify..." rows="8"></textarea>
+
+            <button type="button" onclick="checkNews()" id="predictBtn">Verify Authenticity</button>
+            
+            <div id="resultBox" class="result-container" style="display: none;">
+                <p id="resultText"></p>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        async function checkNews() {
+            const newsText = document.getElementById('newsInput').value;
+            const resultBox = document.getElementById('resultBox');
+            const resultText = document.getElementById('resultText');
+            const btn = document.getElementById('predictBtn');
+
+            if (!newsText.trim()) {
+                alert("Please enter some news text first!");
+                return;
+            }
+
+            btn.innerText = "Analyzing...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ news_text: newsText })
+                });
+
+                const data = await response.json();
+                
+                resultBox.style.display = "block";
+                resultText.innerText = `Result: ${data.prediction}`;
+                
+                // Color coding based on result
+                if (data.prediction === "Real News") {
+                    resultBox.style.background = "rgba(40, 167, 69, 0.3)";
+                    resultBox.style.border = "1px solid #28a745";
+                } else {
+                    resultBox.style.background = "rgba(220, 53, 69, 0.3)";
+                    resultBox.style.border = "1px solid #dc3545";
+                }
+
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Backend server is not running!");
+            } finally {
+                btn.innerText = "Verify Authenticity";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
